@@ -1,0 +1,4 @@
+requests
+bs4
+win10toast
+google-api-python-client
