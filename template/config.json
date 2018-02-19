@@ -1,0 +1,13 @@
+{
+  "secrets": {
+    "MARVEL_COOKIE": "<cookie keys>",
+    "CALENDAR_ID": "<calendar id>"
+  },
+  "subscriptions": [
+    {
+      "title": "<comic title>",
+      "shortname": "<comic shortname>",
+      "startFrom": "<issue number before first sub>"
+    }
+  ]
+}
