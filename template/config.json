@@ -1,7 +1,7 @@
 {
   "secrets": {
-    "MARVEL_COOKIE": "<cookie keys>",
-    "CALENDAR_ID": "<calendar id>"
+    "marvel_cookie": "<cookie keys>",
+    "calendar_id": "<calendar id>"
   },
   "subscriptions": [
     {

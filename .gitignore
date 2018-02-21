@@ -1,2 +1,3 @@
 *.json
 _junk/
+__pycache__/

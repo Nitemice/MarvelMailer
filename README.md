@@ -51,25 +51,25 @@ Config files should follow the following basic structure:
 ```json
 {
   "secrets": {
-    "MARVEL_COOKIE": "<cookie keys>",
-    "CALENDAR_ID": "<calendar id>"
+    "calendar_id": "<calendar id>",
+    "marvel_cookie": "<cookie keys>"
   },
   "subscriptions": [
     {
       "title": "<comic title>",
-      "shortname": "<comic shortname>",
-      "startFrom": "<issue number before first sub>"
+      "short_name": "<comic shortname>",
+      "start_from": "<issue number before first sub>"
     }
   ]
 }
 ```
 
-- `MARVEL_COOKIE` is your authorization cookie, taken from the `COOKIE` header request to the
+- `calendar_id` is the unique ID of the calendar you want to add events to.
+- `marvel_cookie` is your authorization cookie, taken from the `COOKIE` header request to the
   'My Accounts' page.
-- `CALENDAR_ID` is the unique ID of the calendar you want to add events to.
-- `shortname` is a user-chosen alternative name for the comic series. This is used in event
+- `short_name` is a user-chosen alternative name for the comic series. This is used in event
   titles to reduce the bulk of using full titles.
-- `startFrom` is the issue number of the first issue you received through the Marvel
+- `start_from` is the issue number of the first issue you received through the Marvel
   subscriptions.
 
 Here's an example file:
@@ -77,14 +77,14 @@ Here's an example file:
 ```json
 {
   "secrets": {
-  "CALENDAR_ID": "f00b4r1f00b4r2f00b4r3f00b4r@group.calendar.google.com",
-  "MARVEL_COOKIE": "marvel_autologin=205250250250250213023...;"
+  "calendar_id": "f00b4r1f00b4r2f00b4r3f00b4r@group.calendar.google.com",
+  "marvel_cookie": "marvel_autologin=205250250250250213023...;"
   },
   "subscriptions": [
     {
       "title": "Unbeatable Squirrel Girl",
-      "shortname": "USG",
-      "startFrom": "5"
+      "short_name": "USG",
+      "start_from": "5"
     }
   ]
 }
