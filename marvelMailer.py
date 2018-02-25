@@ -44,7 +44,9 @@ else:
     n = Notifier()
 
 # Setup calendar handler
-cal = CalendarHandler("_junk/client_id.json", "moo")
+dirs = AppDirs(APP_NAME, DEVELOPER)
+# TODO Move me
+cal = CalendarHandler("_junk/client_id.json", dirs.user_cache_dir, config["secrets"]["calendar_id"])
 
 # == Scrape website ==
 # Define structure for storing scraped values
@@ -95,7 +97,6 @@ for row in table.find_all("tr", recursive=False):
 
 # == Compare previous subscriptions ==
 # Work out where the previous subscriptions file will be
-dirs = AppDirs(APP_NAME, DEVELOPER)
 data_dir = dirs.user_data_dir
 
 # Check if the folder even exists, and if not, create it

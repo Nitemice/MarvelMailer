@@ -1,13 +1,11 @@
 #rom google_auth_oauthlib.flow import Flow
 #from calendar_handler import CalendarHandler
-from notifier import Notifier
+import pickle
+
 from google_auth_oauthlib.flow import *
 from apiclient import discovery
 import google_auth_httplib2
 
-
-n = Notifier()
-n.notify("DUMMY running")
 
 
 # # Create the flow using the client secrets file from the Google API
@@ -32,6 +30,7 @@ n.notify("DUMMY running")
 # session = flow.authorized_session()
 # print(session.get('https://www.googleapis.com/userinfo/v2/me').json())
 import datetime
+from oauth2client.file import Storage
 
 now = datetime.date.today().isoformat()
 
@@ -44,17 +43,29 @@ event_data = {
 
 # Create the flow using the client secrets file from the Google API
 # Console.
-flow = InstalledAppFlow.from_client_secrets_file(
-    '_junk/client_id.json',
-    scopes=["https://www.googleapis.com/auth/calendar"],
-    redirect_uri='urn:ietf:wg:oauth:2.0:oob')
-
-credentials = flow.run_console()
+# flow = InstalledAppFlow.from_client_secrets_file(
+#     '_junk/client_id.json',
+#     scopes=["https://www.googleapis.com/auth/calendar"],
+#     redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+#
+# credentials = flow.run_console()
 
 # You can use flow.credentials, or you can just get a requests session
 # using flow.authorized_session.
-session = flow.authorized_session()
-write(credentials.to_json())
+# session = flow.authorized_session()
+
+pkl_file = open('data.pkl', 'rb')
+
+credentials = pickle.load(pkl_file)
+
+# store = Storage("moo")
+# store.locked_put(credentials)
+request = google.auth.transport.requests.Request()
+credentials.refresh(request)
+
+# output = open('data.pkl', 'wb')
+# pickle.dump(credentials, output)
+
 service = discovery.build('calendar', 'v3', credentials=credentials)
 event = service.events().insert(calendarId="1sdtrqskn54a5q2bfou9hk375c@group.calendar.google.com",
                                 body=event_data).execute()
