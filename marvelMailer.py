@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 from appdirs import AppDirs
 # Import notifier & calendar handler packages
 from notifier import Notifier, OutputMethodError
-from calendar_handler import addProcessing, addShipped
+from calendar_handler import CalendarHandler
 
 # Setup handy const values
 APP_NAME = "MarvelMailer"
@@ -42,6 +42,9 @@ if "notifier" in config:
         sys.exit(e.message)
 else:
     n = Notifier()
+
+# Setup calendar handler
+cal = CalendarHandler("_junk/client_id.json", "moo")
 
 # == Scrape website ==
 # Define structure for storing scraped values
@@ -148,16 +151,16 @@ if saved_subs != scraped_subs:
         # TODO - handle multiple shipped/processing at same time
         # Create an event to indicate a new issue has been shipped
         if old_sub["shipped"] < new_sub["shipped"]:
-            addShipped(subscription_details, new_sub)
+            cal.add_shipped(subscription_details, new_sub)
 
             # If an issue has shipped, but the processing count hasn't
             # decreased, a new issue must be in processing
             if new_sub["processing"] > 0 and old_sub["processing"] <= new_sub["processing"]:
-                addProcessing(subscription_details, new_sub)
+                cal.add_processing(subscription_details, new_sub)
 
         # Create an event to indicate a new issue is being processed
         if old_sub["processing"] < new_sub["processing"]:
-            addProcessing(subscription_details, new_sub)
+            cal.add_processing(subscription_details, new_sub)
 
 # Combine the new subscription data with the old, so nothing is lost
 missing_subs = [x for x in saved_subs if x["title"] not in scraped_subs_titles]

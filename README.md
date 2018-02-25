@@ -4,8 +4,9 @@
 
 ## Overview
 
-Marvel Mailer is a tool designed to automatically track Marvel subscriptions by
-scraping the ['My Account' page](https://subscriptions.marvel.com/accounts/myaccount.asp),
+Marvel Mailer is a tool designed to automatically track Marvel mail order 
+subscriptions by scraping the 
+['My Account' page](https://subscriptions.marvel.com/accounts/myaccount.asp),
 and adding events to a calendar when a new issue is processed or shipped.
 
 This is done by storing a record of each subscription's status, which is
@@ -21,15 +22,19 @@ events are dispatched for these status changes.
 
 ### Steps
 
-1. Create a `client_id` secret for accessing your Google Account
-    - Visit [Developer Dashboard](https://console.developers.google.com/apis/credentials?)
-      and create a project
-    - Add OAuth to project
-    - Download `client_id.json` secret
+1. Create a `client_id` secret for accessing your Google Account. 
+   For more details instructions, see 
+   [Google's sample instructions](https://developers.google.com/api-client-library/python/samples/samples).
+    - Visit [Developer Dashboard](https://console.developers.google.com/apis/credentials)
+      and create a project.
+    - [Enable "Calendar API" for the project](https://support.google.com/cloud/answer/6158841). 
+    - [Add OAuth to the project](https://support.google.com/cloud/answer/6158841).
+    - Download `client_id.json` secret.
 2. Retrieve your calendar ID and Marvel Subscription cookie keys.
-    - Visit [your calendar settings](https://calendar.google.com/calendar/r) and grab the URL
-    - Visit the [Marvel Accoutns page](https://subscriptions.marvel.com/accounts/myaccount.asp) and 
-      use the developer panel to view the `marvel_autologin` cookie header
+    - Visit [your calendar settings](https://calendar.google.com/calendar/r) and
+      grab the URL.
+    - Visit the [Marvel Accoutns page](https://subscriptions.marvel.com/accounts/myaccount.asp)
+      and use the developer panel to view the `marvel_autologin` cookie header.
 3. Add these to `config.json` file. See 'Config File Format' for more details.
 4. Optionally, define each comic subscription in `config.json`, by adding a title, shortname
    and startFrom issue number.
@@ -46,7 +51,8 @@ Marvel Mailer v1
 
 ## Config File Format
 
-Config files should follow the following basic structure:
+A config file is required to specify various necessary operation information. 
+It should match the following basic structure:
 
 ```json
 {
@@ -60,7 +66,12 @@ Config files should follow the following basic structure:
       "short_name": "<comic shortname>",
       "start_from": "<issue number before first sub>"
     }
-  ]
+  ],
+  "notifier": {
+    "method": "<notification method>",
+    "bot_token": "<telegram bot token>",
+    "user_id": "<telegram user id>"
+  }
 }
 ```
 
@@ -86,23 +97,30 @@ Here's an example file:
       "short_name": "USG",
       "start_from": "5"
     }
-  ]
+  ],
+  "notifier": {
+    "method": "telegram",
+    "bot_token": "999999999:ABC-98pb7hN987yh8nuNYpiugyhgiyo9",
+    "user_id": "555555555"
+  }
 }
 ```
 
 ## TODOs
 
 - Add option to add event to calendar for expected issue arrival dates
-- Refactor code to handle a lack of config info
+- ~~Refactor code to handle a lack of config info~~
 - ~~Use iCal instead of Google-specific calendar~~
 - Add alternative output formats
 - Add alternative output destinations
 - Add flag to not update the status file
-- Rework notification system
+- _Rework notification system_
 - Add option for notifications when subscriptions are running out
 - Add help text
-- Add quiet mode / make default mode less noisy
+- _Add quiet mode / make default mode less noisy_
 - Add setup tool / mode for creating `config.json` file
+- Obtain [Google credentials](https://developers.google.com/identity/protocols/OAuth2ForDevices) 
+  in app flow 
 
 ## License
 

@@ -1,6 +1,7 @@
 # # Imports for calendar writing
-# import datetime
-# from apiclient import discovery
+from apiclient import discovery
+import google_auth_httplib2
+
 # import httplib2
 #
 # # Imports for credential acquisition
@@ -9,7 +10,7 @@
 # from oauth2client import tools
 # from oauth2client.file import Storage
 #
-# CLIENT_SECRET_FILE = 'client_id.json'
+# CLIENT_SECRET_FILE = '_junk/client_id.json'
 # SCOPES = 'https://www.googleapis.com/auth/calendar'
 #
 #
@@ -46,58 +47,65 @@
 #             credentials = tools.run(flow, store)
 #         print('Storing credentials to ' + credential_path)
 #     return credentials
-#
-#
-# def addEvent(summary, location, description):
-#     """ Function for handling calendar even creation """
-#     now = datetime.date.today().isoformat()
-#     event = {
-#       'summary': f'{summary}',
-#       'location': f'{location}',
-#       'description': f'{description}',
-#       'start': {
-#         'date': f'{now}'
-#       },
-#       'end': {
-#         'date': f'{now}'
-#       },
-#       'transparency': 'transparent'
-#     }
-#
-#     credentials = get_credentials("marvelMailer")
-#     http = credentials.authorize(httplib2.Http())
-#     service = discovery.build('calendar', 'v3', http=http)
-#     event = service.events().insert(calendarId = CALENDAR_ID,
-#                                     body = event).execute()
-#     print(f"Event created: {event['htmlLink']}")
-#     return
-#
-#
-# '''
-# Event Format:
-# Summary: `shortname - STATUS - issueCount/totalIssues`
-# Location: `#issueNo`
-# Description: `title`
-# '''
 
 
-def addShipped(subscription_details, subscription_info):
-    """ Function for adding 'shipped issue' event to calendar  """
-    pass
-#     summary = f'{subscription_details["shortname"]} - SHIPPED - {subscription_info["shipped"]}/{subscription_info["total"]}'
-#     location = f'#{subscription_details["startAt"] + subscription_info["shipped"]}'
-#     description = subscription_info["title"]
-#     addEvent(summary, location, description)
-#     return
+# Import for event dating
+import datetime
+# Imports for authentication
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
-def addProcessing(subscription_details, subscription_info):
-    """ Function for adding 'in-processing issue' event to calendar  """
-    pass
-#     processingCount = subscription_info["shipped"] + subscription_info["processing"]
-#     summary = f'{subscription_details["shortname"]} - PROCESSING - {processingCount}/{subscription_info["total"]}'
-#     location = f'#{subscription_details["startAt"] + processingCount}'
-#     description = subscription_info["title"]
-#     addEvent(summary, location, description)
-#     return
-#
+class CalendarHandler:
+    def __init__(self, client_secrets_file, user_token_file):
+
+        flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes=SCOPES,
+                                                         redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+        self.credentials = flow.run_console()
+        self.session = flow.authorized_session()
+
+    def _add_event(self, event_details):
+        """ Function for handling calendar even creation"""
+        # Retrieve today's date
+        now = datetime.date.today().isoformat()
+        event_date = {
+            "start": {"date": now},
+            "end": {"date": now},
+            "transparency": "transparent"
+        }
+        # Combine the event details handed to us, with the date we generated
+        event_data = {**event_date, **event_details}
+
+        service = discovery.build('calendar', 'v3', credentials=self.credentials)
+        event = service.events().insert(calendarId=self.CALENDAR_ID, body=event_data).execute()
+        return event['htmlLink']
+
+    def add_shipped(self, subscription_details, scraped_info):
+        """ Function for adding 'shipped issue' event to calendar"""
+        event = {
+            "summary": "".join([subscription_details["shortname"], " - SHIPPED - ",
+                                scraped_info["shipped"], "/", scraped_info["total"]]),
+            "location": "".join(["#", subscription_details["startAt"] + scraped_info["shipped"]]),
+            "description": scraped_info["title"]
+        }
+        self._add_event(event)
+
+    def add_processing(self, subscription_details, scraped_info):
+        """ Function for adding 'in-processing issue' event to calendar"""
+        processing_count = scraped_info["shipped"] + scraped_info["processing"]
+        event = {
+            "summary": "".join([subscription_details["shortname"], " - PROCESSING - ",
+                                processing_count, "/", scraped_info["total"]]),
+            "location": "".join(["#", subscription_details["startAt"] + processing_count]),
+            "description": scraped_info["title"]
+        }
+        self._add_event(event)
+
+
+'''
+Event Format:
+Summary: `shortname - STATUS - issueCount/totalIssues`
+Location: `#issueNo`
+Description: `title`
+'''

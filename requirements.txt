@@ -1,3 +1,13 @@
+# Used by MarvelMailer
 appdirs
-requests
 bs4
+requests
+
+# Used by Notifier
+requests
+
+# Used by CalendarHandler
+#google
+#google-auth
+#google-auth-oauthlib
+google-auth-httplib2
