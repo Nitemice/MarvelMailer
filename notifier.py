@@ -5,35 +5,48 @@ import requests
 
 
 class OutputMethod(Enum):
-    """Enum for output methods for Notifier"""
+    """Enum for output methods for Notifier."""
     console = 1
     telegram = 2
 
 
 class OutputMethodError(ValueError):
-    """Exception raised if specified output method is not recognised"""
+    """Exception raised if specified output method is not recognised."""
 
     def __init__(self, output_method):
         self.output_method = output_method
 
     @property
     def message(self) -> str:
-        """Generates a basic error message, with bad output type"""
+        """Generate a basic error message, with the bad output type."""
         return "The specified output method (%(output_method)s) is not supported." \
                % {"output_method": self.output_method}
 
 
 class Notifier:
-    """Notifier
-    Handles notifying the user of errors using Telegram or console
+    """
+    Notifier
+
+    Handles notifying the user of messages and errors.
     """
 
     def __init__(self, config=None):
+        """
+        Initialise the Notifier.
+
+        If no configuration is specified, the Notifier defaults to the console
+        as its output method.
+
+        An OutputMethodError will be raised if the specified notification
+        method is not one included in the OutputMethod Enum.
+        """
         self.outputMethod = OutputMethod.console
         if config is not None:
             self.config = config
             if config["method"] == OutputMethod.telegram.name:
                 self.outputMethod = OutputMethod.telegram
+            elif config["method"] == OutputMethod.console.name:
+                self.outputMethod = OutputMethod.console
             else:
                 raise OutputMethodError(config["method"])
 
@@ -54,6 +67,7 @@ class Notifier:
     }
 
     def notify(self, message):
+        """Notify the user via the previously specified method."""
         self._notifyFunctions[self.outputMethod](self, message)
 
     # Error Functions
@@ -73,4 +87,5 @@ class Notifier:
     }
 
     def error(self, message):
+        """Send the user an error message via the previously specified method."""
         self._errorFunctions[self.outputMethod](self, message)

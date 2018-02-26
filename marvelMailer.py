@@ -1,15 +1,19 @@
 """
-Marvel Mailer v2
-Written by Nitemice
-21/01/2018
-Last Edited: 21/02/2018
+Marvel Mailer
+
+Tracks Marvel subscriptions by keeping an eye on issue processing and shipping.
 """
+
+__version__ = '2.0'
+__author__ = 'Nitemice'
+__app_name__ = "MarvelMailer"
+
 
 # Import packages for reading config
 import json
 import sys
 import os
-# Import scraping & requesting libraries
+# Import requesting & scraping libraries
 import requests
 from bs4 import BeautifulSoup
 # Import data-storage location package
@@ -17,11 +21,6 @@ from appdirs import AppDirs
 # Import notifier & calendar handler packages
 from notifier import Notifier, OutputMethodError
 from calendar_handler import CalendarHandler
-
-# Setup handy const values
-APP_NAME = "MarvelMailer"
-DEVELOPER = "Nitemice"
-VERSION = 2.0
 
 # Setup config file variables
 CONFIG_FILE = "config.json"
@@ -43,10 +42,15 @@ if "notifier" in config:
 else:
     n = Notifier()
 
+# Setup directory finder
+dirs = AppDirs(__app_name__, __author__)
+
 # Setup calendar handler
-dirs = AppDirs(APP_NAME, DEVELOPER)
-# TODO Move me
-cal = CalendarHandler("_junk/client_id.json", dirs.user_cache_dir, config["secrets"]["calendar_id"])
+if "secrets" not in config or "client_secret" not in config["secrets"]:
+    n.error("Client secret file not specified.")
+    sys.exit(1)
+cal = CalendarHandler(config["secrets"]["client_secret"], dirs.user_cache_dir,
+                      config["secrets"]["calendar_id"])
 
 # == Scrape website ==
 # Define structure for storing scraped values
@@ -93,6 +97,9 @@ for row in table.find_all("tr", recursive=False):
         n.notify("Total doesn't add up for " + subscription_info["title"])
         n.notify(json.dumps(subscription_info))
 
+    # Store the title for later
+    scraped_subs_titles.append(subscription_info["title"])
+
     scraped_subs.append(subscription_info)
 
 # == Compare previous subscriptions ==
@@ -119,8 +126,6 @@ except FileNotFoundError:
 if saved_subs != scraped_subs:
     n.notify("Change detected")  # TODO Remove?
     for new_sub in scraped_subs:
-        # Store the title for later
-        scraped_subs_titles.append(new_sub["title"])
 
         # Retrieve the matching saved subscription
         old_sub = [x for x in saved_subs if x["title"] == new_sub["title"]]
@@ -132,7 +137,7 @@ if saved_subs != scraped_subs:
             old_sub = [x for x in old_sub if x["total"] != x["shipped"]][0]
         else:
             # This must be a new subscription
-            n.notify("New subscription found: %(title}s" % {"title": new_sub["title"]})
+            n.notify("New subscription found: %(title)s" % new_sub)
 
         # Retrieve the subscription details from the config file
         subscription_details = [x for x in config["subscriptions"]
@@ -146,7 +151,7 @@ if saved_subs != scraped_subs:
                                     "short_name": new_sub["title"],
                                     "start_from": 1}
             n.error("Subscription details missing for %(title)s.\n"
-                    "Using default values (short name = title, start_from = 1)."
+                    "Using default values (short name = title, start from issue #1)."
                     % subscription_details)
 
         # TODO - handle multiple shipped/processing at same time
@@ -163,6 +168,7 @@ if saved_subs != scraped_subs:
         if old_sub["processing"] < new_sub["processing"]:
             cal.add_processing(subscription_details, new_sub)
 
+# == Save to file ==
 # Combine the new subscription data with the old, so nothing is lost
 missing_subs = [x for x in saved_subs if x["title"] not in scraped_subs_titles]
 
