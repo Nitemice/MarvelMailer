@@ -46,10 +46,10 @@ else:
 dirs = AppDirs(__app_name__, __author__)
 
 # Setup calendar handler
-if "secrets" not in config or "client_secret" not in config["secrets"]:
+if "secrets" not in config or "client_secret_file" not in config["secrets"]:
     n.error("Client secret file not specified.")
     sys.exit(1)
-cal = CalendarHandler(config["secrets"]["client_secret"], dirs.user_cache_dir,
+cal = CalendarHandler(config["secrets"]["client_secret_file"], dirs.user_cache_dir,
                       config["secrets"]["calendar_id"])
 
 # == Scrape website ==

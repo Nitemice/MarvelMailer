@@ -11,33 +11,38 @@ and adding events to a calendar when a new issue is processed or shipped.
 
 This is done by storing a record of each subscription's status, which is
 compared with the current status on the webpage. If a difference is detected,
-events are dispatched for these status changes.
+events are dispatched for the status changes.
 
 ## Setup
 
 ### Requirements
 
-- Python 3.6+
-- Various python packages. See `requirements.txt` for package list.
+- Python 3.5+
+- Various Python packages. See `requirements.txt` for package list.
 
 ### Steps
 
-1. Create a `client_id` secret for accessing your Google Account. 
+1. Create a OAuth Client ID secret file for accessing your Google Account. 
    For more details instructions, see 
    [Google's sample instructions](https://developers.google.com/api-client-library/python/samples/samples).
-    - Visit [Developer Dashboard](https://console.developers.google.com/apis/credentials)
-      and create a project.
-    - [Enable "Calendar API" for the project](https://support.google.com/cloud/answer/6158841). 
-    - [Add OAuth to the project](https://support.google.com/cloud/answer/6158841).
-    - Download `client_id.json` secret file.
-2. Retrieve your calendar ID and Marvel Subscription cookie keys.
-    - Visit [your calendar settings](https://calendar.google.com/calendar/r) 
-      and grab the URL.
-    - Visit the [Marvel Accoutns page](https://subscriptions.marvel.com/accounts/myaccount.asp)
-      and use the developer panel to view the `marvel_autologin` cookie header.
-3. Add these to `config.json` file. See 'Config File Format' for more details.
-4. Define each comic subscription in `config.json`, by adding a title, short 
-   name and issue number from which the subscription starts.
+    1. Visit [Developer Dashboard](https://console.developers.google.com/apis/credentials)
+       and create a project.
+    2. [Enable "Calendar API" for the project](https://console.developers.google.com/apis/library/calendar-json.googleapis.com/). 
+    3. [Add OAuth to the project](https://console.developers.google.com/apis/credentials/oauthclient).
+    4. [Download the JSON secrets file](https://console.developers.google.com/apis/credentials).
+2. Retrieve your calendar ID
+    1. Visit the [settings page](https://calendar.google.com/calendar/r) for 
+       the calendar you wish to use.
+    2. Grab the calendar ID from the URL. It will look something like: 
+       `https://calendar.google.com/calendar/r/settings/calendar/<CalendarIDHere>?pli=1`
+3. Retrieve your [Marvel Subscription](https://subscriptions.marvel.com/accounts/myaccount.asp)
+    login cookie. The name or key should be `marvel_autologin`. Exact 
+    instruction for retrieving cookies will depend on your browser. See 
+   [WikiHow for more information](https://www.wikihow.com/View-Cookies).
+4. Add these secrets to your `config.json` file. See 'Config File Format' for 
+   more details.
+5. Add details for each comic subscription to your `config.json`, by adding a
+   title, short name and issue number from which the subscription starts.
 
 ## Usage
 
@@ -51,7 +56,7 @@ Marvel Mailer v1
 
 ## Config File Format
 
-A config file is required to specify various necessary operation information. 
+A config file is required to specify various necessary operational information. 
 It should match the following basic structure:
 
 ```json
@@ -59,7 +64,7 @@ It should match the following basic structure:
   "secrets": {
     "marvel_cookie": "<cookie keys>",
     "calendar_id": "<calendar id>",
-    "client_secret": "<client secret file>"
+    "client_secret_file": "<client secret file>"
   },
   "subscriptions": [
     {
@@ -76,29 +81,46 @@ It should match the following basic structure:
   "subscription_file": "<subscription status file>"
 }
 ```
-
-- `marvel_cookie` is your authorization cookie, taken from the `COOKIE` header 
-   request to the 'My Accounts' page.
+### Secrets
+This section is where all secret information used to perform authentication and
+event handling is specified.
+- `marvel_cookie` is your authorization cookie for accessing the
+  [Marvel 'My Accounts' page](https://subscriptions.marvel.com/accounts/myaccount.asp).
 - `calendar_id` is the unique ID of the calendar you want to add events to.
-- `client_secret` is the filename of the `client_id.json` file used to 
-   access the Google Calendar API. 
+- `client_secret_file` is the filename of the JSON file containing the Google API
+   OAuth credentials tokens, used to access the Google Calendar API. 
    
+### Subscriptions
+This section is where the details of each Marvel subscription are 
+specified.
 - `title` is the title of the comic series, as it appears on the 'My Accounts' 
    page. 
 - `short_name` is a user-chosen alternative name for the comic series. This is 
    used in event titles to reduce the bulk of using full titles.
-- `start_from` is the issue number of the first issue you received through the 
+- `start_from` is the issue number of the first issue you received through
    Marvel subscriptions.
    
-- `method` specifies the method through with notifications and errors should be
-   sent. Currently, two options are supported: `console` which uses 
-   `stdout/stderr`; and `telegram` which uses a user-created bot to send 
-   messages to the user through the Telegram Messenger API.
+### Notifier
+This section allows you to specify how to notify you of warnings and errors. 
+This section is ***optional***, and the console will be used if it is not 
+specified.  
+- `method` specifies the method through which notifications and errors should be
+   sent. Currently, two options are supported: 
+   + `console` which uses `stdout/stderr`. This is the default behaviour.
+   + `telegram` which uses a user-created bot to send messages through the 
+     Telegram Messenger API.
+
+ If you has elected to use `telegram`, the following fields must also be 
+ specified. More information on how to obtain these details can be found 
+ [in this article](https://www.forsomedefinition.com/automation/creating-telegram-bot-notifications/).
  - `bot_token` is the secret token used by the Telegram bot.
- - `user_id` is the Telegram ID of the user that should be sent notifications.
+ - `user_id` is the Telegram ID that should be sent notifications.
  
+### Other
  - `subscription_file` is the filename of the JSON file to be used as the 
-    subscription file, where subscriptions' statuses are stored.    
+    subscription file, where subscriptions' statuses are stored. This field is 
+    ***optional***. If not specified, the subscription file will be stored in 
+    the OS-specific user data directory. 
 
 Here's an example file:
 
@@ -107,7 +129,7 @@ Here's an example file:
   "secrets": {
     "marvel_cookie": "marvel_autologin=205250250250250213023...;",
     "calendar_id": "f00b4r1f00b4r2f00b4r3f00b4r@group.calendar.google.com",
-    "client_secret": "data/client_id.json"
+    "client_secret_file": "data/client_id.json"
   },
   "subscriptions": [
     {
