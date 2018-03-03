@@ -36,16 +36,21 @@ class CalendarHandler:
             os.makedirs(user_creds_folder, exist_ok=True)
             credentials = False
 
+        if credentials:
+            # Refresh the credentials to re-validate them, if possible.
+            request = google.auth.transport.requests.Request()
+            try:
+                credentials.refresh(request)
+            except google.auth.exceptions.RefreshError:
+                # Couldn't refresh credentials, so invalidate them
+                credentials = False
+
         if not credentials or not credentials.valid:
             # Credentials don't exist, or are invalid, so we need to generate some new ones
             flow = InstalledAppFlow. \
                 from_client_secrets_file(client_secrets_file, scopes=SCOPES,
                                          redirect_uri='urn:ietf:wg:oauth:2.0:oob')
             credentials = flow.run_console()
-        else:
-            # Refresh the credentials to make sure they last
-            request = google.auth.transport.requests.Request()
-            credentials.refresh(request)
 
         self.credentials = credentials
 
