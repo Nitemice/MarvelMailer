@@ -103,15 +103,18 @@ for row in table.find_all("tr", recursive=False):
     scraped_subs.append(subscription_info)
 
 # == Compare previous subscriptions ==
-# Work out where the previous subscriptions file will be
-data_dir = dirs.user_data_dir
-
-# Check if the folder even exists, and if not, create it
-if not os.path.lexists(data_dir):
-    os.makedirs(data_dir, exist_ok=True)
-
 SAVED_SUBS_FILE = "subscriptions.json"
-subs_filename = os.path.join(data_dir, SAVED_SUBS_FILE)
+
+# Work out where the previous subscriptions file will be
+if "subscription_file" in config:
+    subs_filename = config["subscription_file"]
+else:
+    # Lookup the default location
+    data_dir = dirs.user_data_dir
+    if not os.path.lexists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
+
+    subs_filename = os.path.join(data_dir, SAVED_SUBS_FILE)
 
 # Load the previous subscriptions file
 saved_subs = {}

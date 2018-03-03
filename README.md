@@ -72,7 +72,8 @@ It should match the following basic structure:
     "method": "<notification method>",
     "bot_token": "<telegram bot token>",
     "user_id": "<telegram user id>"
-  }
+  },
+  "subscription_file": "<subscription status file>"
 }
 ```
 
@@ -94,7 +95,10 @@ It should match the following basic structure:
    `stdout/stderr`; and `telegram` which uses a user-created bot to send 
    messages to the user through the Telegram Messenger API.
  - `bot_token` is the secret token used by the Telegram bot.
- - `user_id` is the Telegram ID of the user that should be sent notifications.    
+ - `user_id` is the Telegram ID of the user that should be sent notifications.
+ 
+ - `subscription_file` is the filename of the JSON file to be used as the 
+    subscription file, where subscriptions' statuses are stored.    
 
 Here's an example file:
 
@@ -103,7 +107,7 @@ Here's an example file:
   "secrets": {
     "marvel_cookie": "marvel_autologin=205250250250250213023...;",
     "calendar_id": "f00b4r1f00b4r2f00b4r3f00b4r@group.calendar.google.com",
-    "client_secret": "client_id.json"
+    "client_secret": "data/client_id.json"
   },
   "subscriptions": [
     {
@@ -116,7 +120,9 @@ Here's an example file:
     "method": "telegram",
     "bot_token": "999999999:ABC-98pb7hN987yh8nuNYpiugyhgiyo9",
     "user_id": "555555555"
-  }
+  },
+  "subscription_file": "data/issueStatus.json"
+
 }
 ```
 

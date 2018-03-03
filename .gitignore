@@ -1,3 +1,4 @@
 *.json
 _junk/
 __pycache__/
+\.idea/
