@@ -4,12 +4,13 @@ Marvel Mailer
 Tracks Marvel subscriptions by keeping an eye on issue processing and shipping.
 """
 
-__version__ = '2.0'
-__author__ = 'Nitemice'
+__version__ = "2.1"
+__author__ = "Nitemice"
 __app_name__ = "MarvelMailer"
 
 
 # Import packages for reading config
+import argparse
 import json
 import sys
 import os
@@ -26,10 +27,21 @@ from calendar_handler import CalendarHandler
 CONFIG_FILE = "config.json"
 config = {}
 
+# Setup command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("config_file", nargs="?", type=argparse.FileType("r"), default=CONFIG_FILE,
+                    help="config file, in JSON format")
+parser.add_argument("--version", action="store_true", help="print version")
+args = parser.parse_args()
+
+# Check if they just want a version number
+if args.version:
+    print(__version__)
+    sys.exit(0)
+
 # Load the config file
 try:
-    with open(CONFIG_FILE) as json_file:
-        config = json.load(json_file)
+    config = json.load(args.config_file)
 except FileNotFoundError as e:
     sys.exit(e)
 
@@ -66,7 +78,7 @@ headers = {"Cookie": config["secrets"]["marvel_cookie"]}
 
 # Request page with cookie and feed it to BeautifulSoup
 r = requests.get(URL, headers=headers)
-soup = BeautifulSoup(r.text, 'html.parser')
+soup = BeautifulSoup(r.text, "html.parser")
 
 # Find the issue status table header
 heading = soup.find("div", string="Active Titles")
@@ -76,7 +88,7 @@ table = heading.find_next("table")
 # Loop over all the rows, and store all the values
 for row in table.find_all("tr", recursive=False):
     # Skip the table header row
-    if 'bold' in row.td.attrs['class']:
+    if "bold" in row.td.attrs["class"]:
         continue
     # Parse data into dictionary
     data = row.find_all("td", recursive=False)
@@ -176,5 +188,5 @@ if saved_subs != scraped_subs:
 missing_subs = [x for x in saved_subs if x["title"] not in scraped_subs_titles]
 
 # Save the new issue statuses
-with open(subs_filename, 'w') as outfile:
+with open(subs_filename, "w") as outfile:
     json.dump(scraped_subs + missing_subs, outfile)
