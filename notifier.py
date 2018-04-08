@@ -4,6 +4,36 @@ import sys
 import requests
 
 
+class OrderedEnum(Enum):
+    """Based on https://docs.python.org/3/library/enum.html"""
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+
+class Verbosity(OrderedEnum):
+    """Enum for verbosity of Notifier."""
+    silent = -2
+    quiet = -1
+    normal = 0
+
+
 class OutputMethod(Enum):
     """Enum for output methods for Notifier."""
     console = 1
@@ -30,7 +60,7 @@ class Notifier:
     Handles notifying the user of messages and errors.
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, verbosity=Verbosity):
         """
         Initialise the Notifier.
 
@@ -40,6 +70,7 @@ class Notifier:
         An OutputMethodError will be raised if the specified notification
         method is not one included in the OutputMethod Enum.
         """
+        self._verbosity = verbosity
         self.outputMethod = OutputMethod.console
         if config is not None:
             self.config = config
@@ -68,7 +99,8 @@ class Notifier:
 
     def notify(self, message):
         """Notify the user via the previously specified method."""
-        self._notifyFunctions[self.outputMethod](self, message)
+        if self._verbosity >= Verbosity.normal:
+            self._notifyFunctions[self.outputMethod](self, message)
 
     # Error Functions
     def _error_console(self, message):
@@ -89,4 +121,5 @@ class Notifier:
 
     def error(self, message):
         """Send the user an error message via the previously specified method."""
-        self._errorFunctions[self.outputMethod](self, message)
+        if self._verbosity >= Verbosity.quiet:
+            self._errorFunctions[self.outputMethod](self, message)

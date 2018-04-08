@@ -50,7 +50,16 @@ Run `python marvelMailer.py`
 
 ```bash
 $ python marvelMailer.py --help
-Marvel Mailer v1
+usage: marvelMailer.py [-h] [--version] [-q | -s] [config_file]
+
+positional arguments:
+  config_file   config file, in JSON format
+
+optional arguments:
+  -h, --help    show this help message and exit
+  --version     print version
+  -q, --quiet   quiet output
+  -s, --silent  silent output
 ...
 ```
 

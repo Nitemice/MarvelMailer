@@ -20,7 +20,7 @@ from bs4 import BeautifulSoup
 # Import data-storage location package
 from appdirs import AppDirs
 # Import notifier & calendar handler packages
-from notifier import Notifier, OutputMethodError
+from notifier import Notifier, OutputMethodError, Verbosity
 from calendar_handler import CalendarHandler
 
 # Setup config file variables
@@ -29,9 +29,12 @@ config = {}
 
 # Setup command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("config_file", nargs="?", type=argparse.FileType("r"), default=CONFIG_FILE,
-                    help="config file, in JSON format")
+parser.add_argument("config_file", nargs="?", type=argparse.FileType("r"),
+                    default=CONFIG_FILE, help="config file, in JSON format")
 parser.add_argument("--version", action="store_true", help="print version")
+verbosity_group = parser.add_mutually_exclusive_group()
+verbosity_group.add_argument("-q", "--quiet", action="store_true", help="quiet output")
+verbosity_group.add_argument("-s", "--silent", action="store_true", help="silent output")
 args = parser.parse_args()
 
 # Check if they just want a version number
@@ -45,14 +48,22 @@ try:
 except FileNotFoundError as e:
     sys.exit(e)
 
+# Set verbosity for notifier
+if args.silent:
+    verbosity = Verbosity.silent
+elif args.quiet:
+    verbosity = Verbosity.quiet
+else:
+    verbosity = Verbosity.normal
+
 # Setup notification system
 if "notifier" in config:
     try:
-        notifier = Notifier(config["notifier"])
+        notifier = Notifier(config=config["notifier"], verbosity=verbosity)
     except OutputMethodError as e:
         sys.exit(e.message)
 else:
-    notifier = Notifier()
+    notifier = Notifier(verbosity=verbosity)
 
 # Setup directory finder
 dirs = AppDirs(__app_name__, __author__)
@@ -74,10 +85,10 @@ URL = "https://subscriptions.marvel.com/accounts/myaccount.asp"
 if "secrets" not in config or "marvel_cookie" not in config["secrets"]:
     notifier.error("Marvel cookie not found.")
     sys.exit(1)
-headers = {"Cookie": config["secrets"]["marvel_cookie"]}
+request_headers = {"Cookie": config["secrets"]["marvel_cookie"]}
 
 # Request page with cookie and feed it to BeautifulSoup
-r = requests.get(URL, headers=headers)
+r = requests.get(URL, headers=request_headers)
 soup = BeautifulSoup(r.text, "html.parser")
 
 # Check if we successfully got the 'My Account' page
@@ -86,15 +97,15 @@ if not soup.find("div", string="Customer Addresses"):
     sys.exit(2)
 
 # Find the issue status table header
-heading = soup.find("div", string="Active Titles")
-# Get the table's div
-table = heading.find_next("table")
-if not heading:
+subscriptions_table_heading = soup.find("div", string="Active Titles")
+if not subscriptions_table_heading:
     notifier.error("Failed to get logged in 'My Account' page.")
     sys.exit(2)
+# Get the subscriptions table's div
+subscriptions_table = subscriptions_table_heading.find_next("table")
 
 # Loop over all the rows, and store all the values
-for row in table.find_all("tr", recursive=False):
+for row in subscriptions_table.find_all("tr", recursive=False):
     # Skip the table header row
     if "bold" in row.td.attrs["class"]:
         continue
