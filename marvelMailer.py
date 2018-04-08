@@ -48,21 +48,21 @@ except FileNotFoundError as e:
 # Setup notification system
 if "notifier" in config:
     try:
-        n = Notifier(config["notifier"])
+        notifier = Notifier(config["notifier"])
     except OutputMethodError as e:
         sys.exit(e.message)
 else:
-    n = Notifier()
+    notifier = Notifier()
 
 # Setup directory finder
 dirs = AppDirs(__app_name__, __author__)
 
 # Setup calendar handler
 if "secrets" not in config or "client_secret_file" not in config["secrets"]:
-    n.error("Client secret file not specified.")
+    notifier.error("Client secret file not specified.")
     sys.exit(1)
 cal = CalendarHandler(config["secrets"]["client_secret_file"], dirs.user_cache_dir,
-                      config["secrets"]["calendar_id"])
+                      config["secrets"]["calendar_id"], notifier)
 
 # == Scrape website ==
 # Define structure for storing scraped values
@@ -72,7 +72,7 @@ URL = "https://subscriptions.marvel.com/accounts/myaccount.asp"
 
 # Create cookie header, to get past the authentication
 if "secrets" not in config or "marvel_cookie" not in config["secrets"]:
-    n.error("Marvel cookie not found.")
+    notifier.error("Marvel cookie not found.")
     sys.exit(1)
 headers = {"Cookie": config["secrets"]["marvel_cookie"]}
 
@@ -80,10 +80,18 @@ headers = {"Cookie": config["secrets"]["marvel_cookie"]}
 r = requests.get(URL, headers=headers)
 soup = BeautifulSoup(r.text, "html.parser")
 
+# Check if we successfully got the 'My Account' page
+if not soup.find("div", string="Customer Addresses"):
+    notifier.error("Failed to get logged in 'My Account' page.")
+    sys.exit(2)
+
 # Find the issue status table header
 heading = soup.find("div", string="Active Titles")
 # Get the table's div
 table = heading.find_next("table")
+if not heading:
+    notifier.error("Failed to get logged in 'My Account' page.")
+    sys.exit(2)
 
 # Loop over all the rows, and store all the values
 for row in table.find_all("tr", recursive=False):
@@ -106,8 +114,8 @@ for row in table.find_all("tr", recursive=False):
        subscription_info["shipped"] + subscription_info["processing"] + \
        subscription_info["remaining"]:
         # It's not quite an error, but is worth noting
-        n.notify("Total doesn't add up for " + subscription_info["title"])
-        n.notify(json.dumps(subscription_info))
+        notifier.notify("Total doesn't add up for " + subscription_info["title"])
+        notifier.notify(json.dumps(subscription_info))
 
     # Store the title for later
     scraped_subs_titles.append(subscription_info["title"])
@@ -134,12 +142,12 @@ try:
     with open(subs_filename) as json_file:
         saved_subs = json.load(json_file)
 except FileNotFoundError:
-    n.notify("Previous subscription data not found. New file will be created.")
+    notifier.notify("Previous subscription data not found. New file will be created.")
     saved_subs = scraped_subs
 
 # Compare old and new values to see if any of these values are new/updated
 if saved_subs != scraped_subs:
-    n.notify("Change detected")  # TODO Remove?
+    notifier.notify("Change detected")  # TODO Remove?
     for new_sub in scraped_subs:
 
         # Retrieve the matching saved subscription
@@ -152,7 +160,7 @@ if saved_subs != scraped_subs:
             old_sub = [x for x in old_sub if x["total"] != x["shipped"]][0]
         else:
             # This must be a new subscription
-            n.notify("New subscription found: %(title)s" % new_sub)
+            notifier.notify("New subscription found: %(title)s" % new_sub)
 
         # Retrieve the subscription details from the config file
         subscription_details = [x for x in config["subscriptions"]
@@ -165,9 +173,9 @@ if saved_subs != scraped_subs:
             subscription_details = {"title": new_sub["title"],
                                     "short_name": new_sub["title"],
                                     "start_from": 1}
-            n.error("Subscription details missing for %(title)s.\n"
-                    "Using default values (short name = title, start from issue #1)."
-                    % subscription_details)
+            notifier.error("Subscription details missing for %(title)s.\n"
+                           "Using default values (short name = title, start from issue #1)."
+                           % subscription_details)
 
         # TODO - handle multiple shipped/processing at same time
         # Create an event to indicate a new issue has been shipped

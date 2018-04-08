@@ -79,6 +79,7 @@ class Notifier:
         user_id = self.config["user_id"]
         url = "https://api.telegram.org/bot%(bot_token)s/" \
               "sendMessage?chat_id=%(user_id)s&text=%(message)s"
+        message = "ERROR: " + message
         requests.get(url % locals())
 
     _errorFunctions = {

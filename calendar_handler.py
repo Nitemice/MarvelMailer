@@ -19,7 +19,7 @@ class CalendarHandler:
     Handles authentication and adding events to the calendar.
     """
 
-    def __init__(self, client_secrets_file, user_creds_folder, calendar_id):
+    def __init__(self, client_secrets_file, user_creds_folder, calendar_id, notifier):
         """
         Authenticates the user and sets up the credentials for adding events.
 
@@ -47,7 +47,8 @@ class CalendarHandler:
 
         if not credentials or not credentials.valid:
             # Credentials don't exist, or are invalid, so we need to generate some new ones
-            flow = InstalledAppFlow. \
+            notifier.error("Calendar credentials don't exist, or are invalid.")
+            flow = InstalledAppFlow.\
                 from_client_secrets_file(client_secrets_file, scopes=SCOPES,
                                          redirect_uri='urn:ietf:wg:oauth:2.0:oob')
             credentials = flow.run_console()
