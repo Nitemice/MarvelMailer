@@ -59,13 +59,15 @@ class CalendarHandler:
         with open(creds_file, 'wb') as pkl_file:
             pickle.dump(credentials, pkl_file)
 
-    def _add_event(self, event_details):
-        """Create and add a calendar event, with today's date."""
-        # Retrieve today's date
-        now = datetime.date.today().isoformat()
+    def _add_event(self, event_details, date=None):
+        """Create and add a calendar event, with specified or today's date."""
+        if not date:
+            # Retrieve today's date
+            date = datetime.date.today().isoformat()
+
         event_date = {
-            "start": {"date": now},
-            "end": {"date": now},
+            "start": {"date": date},
+            "end": {"date": date},
             "transparency": "transparent"
         }
         # Combine the event details handed to us, with the date we generated
@@ -105,3 +107,19 @@ class CalendarHandler:
             "description": scraped_info["title"]
         }
         return self._add_event(event)
+
+    def add_estimated_arrival(self, subscription_details, scraped_info, expected_delivery_time):
+        """Add a 'estimated arrival issue' event to the calendar."""
+        issue_no = subscription_details["start_from"] + scraped_info["shipped"] - 1
+        event = {
+            "summary": (subscription_details["short_name"] + " - ETA - " +
+                        str(scraped_info["shipped"]) + "/" + str(scraped_info["total"])),
+            "location": "#" + str(issue_no),
+            "description": scraped_info["title"],
+            "reminders": {
+                "useDefault": False,
+                "overrides": [{"method": "popup", "minutes": 900}],
+            }
+        }
+        date = datetime.date.today() + datetime.timedelta(days=expected_delivery_time)
+        return self._add_event(event, date.isoformat())

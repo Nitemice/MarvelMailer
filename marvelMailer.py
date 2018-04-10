@@ -192,6 +192,9 @@ if saved_subs != scraped_subs:
         # Create an event to indicate a new issue has been shipped
         if old_sub["shipped"] < new_sub["shipped"]:
             cal.add_shipped(subscription_details, new_sub)
+            if "expected_delivery_time" in config:
+                cal.add_estimated_arrival(subscription_details, new_sub,
+                                          config["expected_delivery_time"])
 
             # If an issue has shipped, but the processing count hasn't
             # decreased, a new issue must be in processing

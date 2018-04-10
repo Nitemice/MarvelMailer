@@ -63,6 +63,17 @@ optional arguments:
 ...
 ```
 
+### First Run
+
+On first run, you must authorise the application to access your Google account 
+and calendar. This is done by running the application, which will prompt you 
+with a URL to visit, where you will need to login to a Google Account with 
+access to the calendar you want to use, authorise access to the calendar, and 
+copy a code to pass back to the application.
+
+For more technical details, see 
+[this article by Google](https://developers.google.com/api-client-library/python/auth/installed-app).
+
 ## Config File Format
 
 A config file is required to specify various necessary operational information. 
@@ -73,7 +84,7 @@ It should match the following basic structure:
   "secrets": {
     "marvel_cookie": "<cookie keys>",
     "calendar_id": "<calendar id>",
-    "client_secret_file": "<client secret file>"
+    "client_secret_file": "<client secret filename>"
   },
   "subscriptions": [
     {
@@ -87,7 +98,8 @@ It should match the following basic structure:
     "bot_token": "<telegram bot token>",
     "user_id": "<telegram user id>"
   },
-  "subscription_file": "<subscription status file>"
+  "subscription_file": "<subscription status filename>",
+  "expected_delivery_time": "<expected delivery days>"
 }
 ```
 ### Secrets
@@ -97,27 +109,27 @@ event handling is specified.
   [Marvel 'My Accounts' page](https://subscriptions.marvel.com/accounts/myaccount.asp).
 - `calendar_id` is the unique ID of the calendar you want to add events to.
 - `client_secret_file` is the filename of the JSON file containing the Google API
-   OAuth credentials tokens, used to access the Google Calendar API. 
+  OAuth credentials tokens, used to access the Google Calendar API. 
    
 ### Subscriptions
 This section is where the details of each Marvel subscription are 
 specified.
 - `title` is the title of the comic series, as it appears on the 'My Accounts' 
-   page. 
+  page. 
 - `short_name` is a user-chosen alternative name for the comic series. This is 
-   used in event titles to reduce the bulk of using full titles.
+  used in event titles to reduce the bulk of using full titles.
 - `start_from` is the issue number of the first issue you received through
-   Marvel subscriptions.
+  Marvel subscriptions.
    
 ### Notifier
 This section allows you to specify how to notify you of warnings and errors. 
 This section is ***optional***, and the console will be used if it is not 
 specified.  
 - `method` specifies the method through which notifications and errors should be
-   sent. Currently, two options are supported: 
-   + `console` which uses `stdout/stderr`. This is the default behaviour.
-   + `telegram` which uses a user-created bot to send messages through the 
-     Telegram Messenger API.
+  sent. Currently, two options are supported: 
+  + `console` which uses `stdout/stderr`. This is the default behaviour.
+  + `telegram` which uses a user-created bot to send messages through the 
+    Telegram Messenger API.
 
  If you has elected to use `telegram`, the following fields must also be 
  specified. More information on how to obtain these details can be found 
@@ -127,9 +139,14 @@ specified.
  
 ### Other
  - `subscription_file` is the filename of the JSON file to be used as the 
-    subscription file, where subscriptions' statuses are stored. This field is 
-    ***optional***. If not specified, the subscription file will be stored in 
-    the OS-specific user data directory. 
+   subscription file, where subscriptions' statuses are stored. This field is 
+   ***optional***. If not specified, the subscription file will be stored in 
+   the OS-specific user data directory. 
+ - `expected_delivery_time` is the number of days that a comic usually takes to 
+   be delivered after it is marked as shipped on the Marvel 'My Accounts' page.
+   This field is ***optional***. If specified, an additional event will be added 
+   to the specified calendar when an issue is shipped, to signify when the issue
+   is expected to arrive. Otherwise, this functionality is disabled. 
 
 Here's an example file:
 
@@ -152,7 +169,8 @@ Here's an example file:
     "bot_token": "999999999:ABC-98pb7hN987yh8nuNYpiugyhgiyo9",
     "user_id": "555555555"
   },
-  "subscription_file": "data/issueStatus.json"
+  "subscription_file": "data/issueStatus.json",
+  "expected_delivery_time": 14
 
 }
 ```
@@ -160,17 +178,13 @@ Here's an example file:
 ## TODOs
 
 - Add option to add event to calendar for expected issue arrival dates
-- ~~Refactor code to handle a lack of config info~~
-- ~~Use iCal instead of Google-specific calendar~~
+- Scrape inactive subscriptions to make sure we get the last issue 
 - Add alternative output formats
 - Add alternative output destinations
-- Add flag to not update the status file
-- _Rework notification system_
+- Add option to not update the status file
 - Add option for notifications when subscriptions are running out
-- Add help text
-- _Add quiet mode / make default mode less noisy_
-- Add setup tool / mode for creating `config.json` file
-- Scrape inactive subscriptions to make sure we get the last issue 
+- Add notifications for all errors
+- Handle expired calendar authorisation notification/renewal
 
 ## License
 
