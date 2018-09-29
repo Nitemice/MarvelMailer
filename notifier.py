@@ -32,6 +32,7 @@ class Verbosity(OrderedEnum):
     silent = -2
     quiet = -1
     normal = 0
+    verbose = 1
 
 
 class OutputMethod(Enum):
@@ -81,27 +82,6 @@ class Notifier:
             else:
                 raise OutputMethodError(config["method"])
 
-    # Notification Functions
-    def _notify_console(self, message):
-        print(message, file=sys.stdout, end='')
-
-    def _notify_telegram(self, message):
-        bot_token = self.config["bot_token"]
-        user_id = self.config["user_id"]
-        url = "https://api.telegram.org/bot%(bot_token)s/" \
-              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
-        requests.get(url % locals())
-
-    _notifyFunctions = {
-        OutputMethod.console: _notify_console,
-        OutputMethod.telegram: _notify_telegram
-    }
-
-    def notify(self, message):
-        """Notify the user via the previously specified method."""
-        if self._verbosity >= Verbosity.normal:
-            self._notifyFunctions[self.outputMethod](self, message)
-
     # Error Functions
     def _error_console(self, message):
         print(message, file=sys.stderr, end='')
@@ -123,3 +103,45 @@ class Notifier:
         """Send the user an error message via the previously specified method."""
         if self._verbosity >= Verbosity.quiet:
             self._errorFunctions[self.outputMethod](self, message)
+
+    # Notification Functions
+    def _notify_console(self, message):
+        print(message, file=sys.stdout, end='')
+
+    def _notify_telegram(self, message):
+        bot_token = self.config["bot_token"]
+        user_id = self.config["user_id"]
+        url = "https://api.telegram.org/bot%(bot_token)s/" \
+              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
+        requests.get(url % locals())
+
+    _notifyFunctions = {
+        OutputMethod.console: _notify_console,
+        OutputMethod.telegram: _notify_telegram
+    }
+
+    def notify(self, message):
+        """Notify the user via the previously specified method."""
+        if self._verbosity >= Verbosity.normal:
+            self._notifyFunctions[self.outputMethod](self, message)
+
+    # Log Functions
+    def _log_console(self, message):
+        print(message, file=sys.stdout, end='')
+
+    def _log_telegram(self, message):
+        bot_token = self.config["bot_token"]
+        user_id = self.config["user_id"]
+        url = "https://api.telegram.org/bot%(bot_token)s/" \
+              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
+        requests.get(url % locals())
+
+    _logFunctions = {
+        OutputMethod.console: _log_console,
+        OutputMethod.telegram: _log_telegram
+    }
+
+    def log(self, message):
+        """Log additional information to the user via the previously specified method."""
+        if self._verbosity >= Verbosity.verbose:
+            self._logFunctions[self.outputMethod](self, message)

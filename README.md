@@ -171,7 +171,6 @@ Here's an example file:
   },
   "subscription_file": "data/issueStatus.json",
   "expected_delivery_time": 14
-
 }
 ```
 

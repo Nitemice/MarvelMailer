@@ -33,8 +33,9 @@ parser.add_argument("config_file", nargs="?", type=argparse.FileType("r"),
                     default=CONFIG_FILE, help="config file, in JSON format")
 parser.add_argument("--version", action="store_true", help="print version")
 verbosity_group = parser.add_mutually_exclusive_group()
-verbosity_group.add_argument("-q", "--quiet", action="store_true", help="quiet output")
-verbosity_group.add_argument("-s", "--silent", action="store_true", help="silent output")
+verbosity_group.add_argument("-v", "--verbose", action="store_true", help="detailed output")
+verbosity_group.add_argument("-q", "--quiet", action="store_true", help="less output")
+verbosity_group.add_argument("-s", "--silent", action="store_true", help="no output")
 args = parser.parse_args()
 
 # Check if they just want a version number
@@ -53,6 +54,8 @@ if args.silent:
     verbosity = Verbosity.silent
 elif args.quiet:
     verbosity = Verbosity.quiet
+elif args.verbose:
+    verbosity = Verbosity.verbose
 else:
     verbosity = Verbosity.normal
 
@@ -158,9 +161,9 @@ except FileNotFoundError:
 
 # Compare old and new values to see if any of these values are new/updated
 if saved_subs != scraped_subs:
-    notifier.notify("Change detected")  # TODO Remove?
-    for new_sub in scraped_subs:
+    notifier.notify("Change detected")
 
+    for new_sub in scraped_subs:
         # Retrieve the matching saved subscription
         old_sub = [x for x in saved_subs if x["title"] == new_sub["title"]]
         if len(old_sub) == 1:
@@ -184,13 +187,14 @@ if saved_subs != scraped_subs:
             subscription_details = {"title": new_sub["title"],
                                     "short_name": new_sub["title"],
                                     "start_from": 1}
-            notifier.error("Subscription details missing for %(title)s.\n"
+            notifier.error("Subscription details missing for '%(title)s'.\n"
                            "Using default values (short name = title, start from issue #1)."
                            % subscription_details)
 
         # TODO - handle multiple shipped/processing at same time
         # Create an event to indicate a new issue has been shipped
         if old_sub["shipped"] < new_sub["shipped"]:
+            notifier.log("New issue of '%(title)s' shipped." % subscription_details)
             cal.add_shipped(subscription_details, new_sub)
             if "expected_delivery_time" in config:
                 cal.add_estimated_arrival(subscription_details, new_sub,
@@ -199,10 +203,12 @@ if saved_subs != scraped_subs:
             # If an issue has shipped, but the processing count hasn't
             # decreased, a new issue must be in processing
             if new_sub["processing"] > 0 and old_sub["processing"] <= new_sub["processing"]:
+                notifier.log("New issue of '%(title)s' processed." % subscription_details)
                 cal.add_processing(subscription_details, new_sub)
 
         # Create an event to indicate a new issue is being processed
         if old_sub["processing"] < new_sub["processing"]:
+            notifier.log("New issue of '%(title)s' processed." % subscription_details)
             cal.add_processing(subscription_details, new_sub)
 
 # == Save to file ==
