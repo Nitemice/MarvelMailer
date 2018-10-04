@@ -123,3 +123,22 @@ class CalendarHandler:
         }
         date = datetime.date.today() + datetime.timedelta(days=expected_delivery_time)
         return self._add_event(event, date.isoformat())
+
+
+class NoOpCalendarHandler(CalendarHandler):
+    """
+    NoOpCalendarHandler
+
+    A CalendarHandler that does nothing, for use on dry-runs.
+    """
+    def __init__(self):
+        pass
+
+    def add_estimated_arrival(self, subscription_details, scraped_info, expected_delivery_time):
+        pass
+
+    def add_processing(self, subscription_details, scraped_info):
+        pass
+
+    def add_shipped(self, subscription_details, scraped_info):
+        pass

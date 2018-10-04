@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 from appdirs import AppDirs
 # Import notifier & calendar handler packages
 from notifier import Notifier, OutputMethodError, Verbosity
-from calendar_handler import CalendarHandler
+from calendar_handler import CalendarHandler, NoOpCalendarHandler
 
 # Setup config file variables
 CONFIG_FILE = "config.json"
@@ -32,6 +32,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("config_file", nargs="?", type=argparse.FileType("r"),
                     default=CONFIG_FILE, help="config file, in JSON format")
 parser.add_argument("--version", action="store_true", help="print version")
+parser.add_argument("-d", "--dry-run", action="store_true",
+                    help="check for changes without updating subscription file or creating events")
 verbosity_group = parser.add_mutually_exclusive_group()
 verbosity_group.add_argument("-v", "--verbose", action="store_true", help="detailed output")
 verbosity_group.add_argument("-q", "--quiet", action="store_true", help="less output")
@@ -72,11 +74,14 @@ else:
 dirs = AppDirs(__app_name__, __author__)
 
 # Setup calendar handler
-if "secrets" not in config or "client_secret_file" not in config["secrets"]:
-    notifier.error("Client secret file not specified.")
-    sys.exit(1)
-cal = CalendarHandler(config["secrets"]["client_secret_file"], dirs.user_cache_dir,
-                      config["secrets"]["calendar_id"], notifier)
+if args.dry_run:
+    cal = NoOpCalendarHandler()
+else:
+    if "secrets" not in config or "client_secret_file" not in config["secrets"]:
+        notifier.error("Client secret file not specified.")
+        sys.exit(1)
+    cal = CalendarHandler(config["secrets"]["client_secret_file"], dirs.user_cache_dir,
+                          config["secrets"]["calendar_id"], notifier)
 
 # == Scrape website ==
 # Define structure for storing scraped values
@@ -216,5 +221,6 @@ if saved_subs != scraped_subs:
 missing_subs = [x for x in saved_subs if x["title"] not in scraped_subs_titles]
 
 # Save the new issue statuses
-with open(subs_filename, "w") as outfile:
-    json.dump(scraped_subs + missing_subs, outfile)
+if not args.dry_run:
+    with open(subs_filename, "w") as outfile:
+        json.dump(scraped_subs + missing_subs, outfile)
