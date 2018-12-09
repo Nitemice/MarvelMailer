@@ -1,5 +1,7 @@
 # MarvelMailer
 
+![MarvelMailer Logo](icon/icon_big.png)
+
 *Tracks Marvel subscriptions by keeping an eye on issue processing and shipping*
 
 ## Overview

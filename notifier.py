@@ -61,6 +61,10 @@ class Notifier:
     Handles notifying the user of messages and errors.
     """
 
+    TELEGRAM_URL = "https://api.telegram.org/bot%(bot_token)s/" \
+                   "sendMessage?chat_id=%(user_id)s&text=%(message)s" \
+                   "&parse_mode=Markdown"
+
     def __init__(self, config=None, verbosity=Verbosity):
         """
         Initialise the Notifier.
@@ -89,10 +93,8 @@ class Notifier:
     def _error_telegram(self, message):
         bot_token = self.config["bot_token"]
         user_id = self.config["user_id"]
-        url = "https://api.telegram.org/bot%(bot_token)s/" \
-              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
-        message = "ERROR: " + message
-        requests.get(url % locals())
+        message = "*ERROR*: " + message
+        requests.get(self.TELEGRAM_URL % locals())
 
     _errorFunctions = {
         OutputMethod.console: _error_console,
@@ -111,9 +113,7 @@ class Notifier:
     def _notify_telegram(self, message):
         bot_token = self.config["bot_token"]
         user_id = self.config["user_id"]
-        url = "https://api.telegram.org/bot%(bot_token)s/" \
-              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
-        requests.get(url % locals())
+        requests.get(self.TELEGRAM_URL % locals())
 
     _notifyFunctions = {
         OutputMethod.console: _notify_console,
@@ -132,9 +132,7 @@ class Notifier:
     def _log_telegram(self, message):
         bot_token = self.config["bot_token"]
         user_id = self.config["user_id"]
-        url = "https://api.telegram.org/bot%(bot_token)s/" \
-              "sendMessage?chat_id=%(user_id)s&text=%(message)s"
-        requests.get(url % locals())
+        requests.get(self.TELEGRAM_URL % locals())
 
     _logFunctions = {
         OutputMethod.console: _log_console,
